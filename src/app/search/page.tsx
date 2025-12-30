@@ -3,15 +3,8 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { NavMenu } from "@/components/nav-menu"
-import { Input } from "@/components/ui/input"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -20,8 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-type Provider = "netease" | "tencent" | "kugou" | "baidu" | "kuwo"
+import { Provider } from "@/components/provider-selector"
 
 interface SongResult {
   id: string | number
@@ -121,35 +113,17 @@ export default function SearchPage() {
       <main className="w-full max-w-4xl py-10 px-6">
         <NavMenu />
         
-        <h1 className="text-xl font-bold mb-4">歌曲搜索</h1>
-
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="w-full md:w-32">
-            <Select value={provider} onValueChange={(v) => setProvider(v as Provider)}>
-              <SelectTrigger>
-                <SelectValue placeholder="平台" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="netease">网易云</SelectItem>
-                <SelectItem value="tencent">QQ音乐</SelectItem>
-                <SelectItem value="kugou">酷狗</SelectItem>
-                <SelectItem value="kuwo">酷我</SelectItem>
-                <SelectItem value="baidu">百度</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex-1 flex gap-2">
-            <Input 
-              placeholder="输入歌曲名、歌手..." 
-              value={keyword} 
-              onChange={(e) => setKeyword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button onClick={handleSearch} disabled={loading}>
-              {loading ? "搜索中..." : "搜索"}
-            </Button>
-          </div>
-        </div>
+        <PageHeader 
+          title="歌曲搜索"
+          provider={provider}
+          setProvider={setProvider}
+          inputValue={keyword}
+          setInputValue={setKeyword}
+          placeholder="输入歌曲名、歌手..."
+          actionLabel="搜索"
+          onAction={handleSearch}
+          loading={loading}
+        />
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 

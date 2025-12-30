@@ -1,9 +1,7 @@
 "use client"
 import { useEffect, useMemo, useState, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/page-header"
 import { Switch } from "@/components/ui/switch"
 import LyricsRenderer from "@/components/lyrics-renderer"
 import AIConfig from "@/components/ai-config"
@@ -13,8 +11,7 @@ import remarkGfm from "remark-gfm"
 import remarkCjkFriendly from "remark-cjk-friendly"
 import { analyzePrompt } from "@/prompts/analyze"
 import { NavMenu } from "@/components/nav-menu"
-
-type Provider = "netease" | "tencent" | "kugou" | "baidu" | "kuwo"
+import { Provider } from "@/components/provider-selector"
 
 function HomeContent() {
   const searchParams = useSearchParams()
@@ -228,31 +225,20 @@ function HomeContent() {
       <main className="w-full max-w-4xl py-10 px-6">
         <NavMenu />
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="md:col-span-1">
-            <label className="mb-2 block text-sm">平台</label>
-            <Select value={provider} onValueChange={(v) => setProvider(v as Provider)}>
-              <SelectTrigger><SelectValue placeholder="选择平台" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="netease">网易云音乐</SelectItem>
-                <SelectItem value="tencent">QQ 音乐</SelectItem>
-                <SelectItem value="kugou">酷狗音乐</SelectItem>
-                <SelectItem value="kuwo">酷我音乐</SelectItem>
-                <SelectItem value="baidu">百度音乐</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm">歌曲链接或 ID</label>
-            <div className="flex gap-2">
-              <Input placeholder="输入歌曲 ID 直链" value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
-              <Button onClick={() => fetchLyrics()} disabled={loading}>获取歌词</Button>
-            </div>
-            {lyricError && (
-              <p className="mt-2 text-sm text-red-600">{lyricError}</p>
-            )}
-          </div>
-        </div>
+        <PageHeader 
+          title="歌词分析"
+          provider={provider}
+          setProvider={setProvider}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          placeholder="输入歌曲链接或 ID..."
+          actionLabel="获取歌词"
+          onAction={() => fetchLyrics()}
+          loading={loading}
+        />
+        {lyricError && (
+          <p className="mt-2 text-sm text-red-600 mb-4">{lyricError}</p>
+        )}
 
         {lyrics && (
           <div className="grid grid-cols-1 gap-6 mt-6">
