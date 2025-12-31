@@ -20,7 +20,7 @@ function SearchContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  
+
   // Local state for input fields only
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "")
   const [provider, setProvider] = useState<Provider>((searchParams.get("provider") as Provider) || "tencent")
@@ -44,7 +44,7 @@ function SearchContent() {
   function handleSelect(minfo: SongResult) {
     const songId = minfo.id || minfo.url_id
     if (!songId) return
-    
+
     router.push(`/?id=${songId}&provider=${provider}`)
   }
 
@@ -52,8 +52,8 @@ function SearchContent() {
     <div className="flex h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex flex-col w-full max-w-4xl h-full py-10 px-6">
         <NavMenu />
-        
-        <PageHeader 
+
+        <PageHeader
           title="歌曲搜索"
           provider={provider}
           setProvider={setProvider}
@@ -68,46 +68,48 @@ function SearchContent() {
         {error && <p className="text-red-500 mb-4">Error: {(error as Error).message}</p>}
 
         <div className="flex-1 border rounded-md bg-white dark:bg-zinc-900 overflow-hidden flex flex-col min-h-0">
-          <div className="overflow-auto flex-1">
-            <Table className="table-fixed">
-              <TableHeader className="sticky top-0 bg-white dark:bg-zinc-900 z-10">
+          <Table className="table-fixed overflow-auto flex-1">
+            <TableHeader className="sticky top-0 bg-white dark:bg-zinc-900 z-10">
+              <TableRow>
+                <TableHead className="w-1/3">歌曲名称</TableHead>
+                <TableHead className="w-1/3">歌手</TableHead>
+                <TableHead className="w-1/3">专辑</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {results.length === 0 && !loading && (
                 <TableRow>
-                  <TableHead className="">歌曲名称</TableHead>
-                  <TableHead className="w-1/4">歌手</TableHead>
-                  <TableHead className="w-1/4">专辑</TableHead>
-                  <TableHead className="w-[90px]">操作</TableHead>
+                  <TableCell colSpan={3} className="text-center text-zinc-500 h-24">
+                    暂无搜索结果
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.length === 0 && !loading && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-zinc-500 h-24">
-                      暂无搜索结果
-                    </TableCell>
-                  </TableRow>
-                )}
-                {results.map((song, idx) => (
-                  <TableRow key={song.id || idx}>
-                    <TableCell className="font-medium truncate">{song.name}</TableCell>
-                    <TableCell className="truncate">{Array.isArray(song.artist) ? song.artist.join(", ") : song.artist}</TableCell>
-                    <TableCell className="truncate">{song.album}</TableCell>
-                    <TableCell className="">
-                      <Button size="sm" onClick={() => handleSelect(song)}>
-                        选择
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {loading && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-zinc-500 h-24">
-                      加载中...
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+              )}
+              {results.map((song, idx) => (
+                <TableRow key={song.id || idx}>
+                  <TableCell className="font-medium truncate">
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                      onClick={() => handleSelect(song)}
+                    >
+                      {song.name}
+                    </Button>
+                  </TableCell>
+                  <TableCell className="truncate">
+                    {Array.isArray(song.artist) ? song.artist.join(", ") : song.artist}
+                  </TableCell>
+                  <TableCell className="truncate">{song.album}</TableCell>
+                </TableRow>
+              ))}
+              {loading && (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-zinc-500 h-24">
+                    加载中...
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </main>
     </div>
