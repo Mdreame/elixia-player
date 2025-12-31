@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { PageHeader } from "@/components/page-header"
-import { Switch } from "@/components/ui/switch"
+
 import LyricsRenderer from "@/components/lyrics-renderer"
 import AIConfig from "@/components/ai-config"
 import { parseLrc, type Lyrics } from "@/lib/lyrics"
@@ -13,7 +13,7 @@ import { analyzePrompt } from "@/prompts/analyze"
 import { NavMenu } from "@/components/nav-menu"
 import { Provider } from "@/components/provider-selector"
 import { useLyrics } from "@/hooks/use-api"
-import { Player } from "@/components/player"
+import { Player, type PlayerRef } from "@/components/player"
 
 function HomeContent() {
   const searchParams = useSearchParams()
@@ -30,11 +30,12 @@ function HomeContent() {
   const [model, setModel] = useState("gpt-4o-mini")
   // const [loading, setLoading] = useState(false) // Now derived
   const [aLoading, setALoading] = useState(false)
-  const [showTranslation, setShowTranslation] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0)
   // const [coverUrl, setCoverUrl] = useState("") // Now derived
   // const [songInfo, setSongInfo] = useState<{ name: string; artist: string[]; album: string } | null>(null) // Now derived
   const [showReasoning, setShowReasoning] = useState(false)
   const analysisInProgressRef = useRef(false)
+  const playerRef = useRef<PlayerRef>(null)
 
   // URL Params -> Hook Params
   const urlProvider = (searchParams.get("provider") as Provider)
@@ -218,11 +219,11 @@ function HomeContent() {
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="w-full max-w-4xl py-10 px-6">
+      <main className="w-full max-w-4xl py-6 md:py-10 px-4 md:px-6">
         <NavMenu />
         
         <PageHeader 
-          title="歌词分析"
+          title="播放器"
           provider={provider}
           setProvider={setProvider}
           inputValue={inputValue}
@@ -241,20 +242,21 @@ function HomeContent() {
             <div  className="space-y-4">
                 {coverUrl && songInfo && (
                   <Player 
+                    ref={playerRef}
                     id={urlId || inputValue} 
                     provider={provider} 
                     coverUrl={coverUrl} 
-                    songInfo={songInfo} 
+                    songInfo={songInfo}
+                    onTimeUpdate={setCurrentTime}
                   />
                 )}
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium">歌词</h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">显示翻译</span>
-                  <Switch checked={showTranslation} onCheckedChange={setShowTranslation} />
-                </div>
-              </div>
-                <LyricsRenderer lyrics={lyrics} showTranslation={showTranslation} showTimestamp={true} />
+              <LyricsRenderer 
+                lyrics={lyrics} 
+                currentTime={currentTime} 
+                showTimestamp={true} 
+                coverUrl={coverUrl}
+                onSeek={(time) => playerRef.current?.seek(time)}
+              />
             </div>
             <div>
               <h2 className="text-lg font-medium mb-2">AI 赏析</h2>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { Provider } from "@/components/provider-selector";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Loader2, Volume2, VolumeX } from "lucide-react";
@@ -17,7 +17,12 @@ interface PlayerProps {
   };
 }
 
-export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
+export interface PlayerRef {
+  seek: (time: number) => void;
+}
+
+export const Player = forwardRef<PlayerRef, PlayerProps & { onTimeUpdate?: (time: number) => void }>(
+  ({ id, provider, coverUrl, songInfo, onTimeUpdate }, ref) => {
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,6 +33,16 @@ export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
   const [isMuted, setIsMuted] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    seek: (time: number) => {
+      handleSeek([time]);
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(e => console.error("Play failed:", e));
+        setIsPlaying(true);
+      }
+    }
+  }));
 
   useEffect(() => {
     let mounted = true;
@@ -91,9 +106,11 @@ export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
     setIsPlaying(!isPlaying);
   };
 
-  const onTimeUpdate = () => {
+  const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const time = audioRef.current.currentTime;
+      setCurrentTime(time);
+      onTimeUpdate?.(time);
     }
   };
 
@@ -139,7 +156,7 @@ export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl shadow-xl bg-zinc-900 border border-white/10 group">
+    <div className="relative overflow-hidden rounded-2xl shadow-xl bg-zinc-900 border border-white/10 group h-72 md:h-80">
       {/* Background Blur Effect */}
       <div 
         className="absolute inset-0 opacity-40 bg-cover bg-center blur-2xl transform scale-125 transition-all duration-700 ease-in-out group-hover:scale-110 group-hover:opacity-50"
@@ -147,7 +164,7 @@ export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
-      <div className="relative p-6 flex flex-col gap-6 text-white z-10">
+      <div className="relative p-4 md:p-6 flex flex-col justify-between h-full text-white z-10">
         
         <div className="flex items-center gap-6">
           <div className="relative shrink-0">
@@ -155,13 +172,13 @@ export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
             <img 
               src={coverUrl || "/placeholder.png"} 
               alt="专辑封面" 
-              className={`w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-xl shadow-2xl ring-1 ring-white/10 transition-transform duration-500 ease-out ${isPlaying ? 'scale-105' : 'scale-100'}`}
+              className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-cover rounded-xl shadow-2xl ring-1 ring-white/10 transition-transform duration-500 ease-out ${isPlaying ? 'scale-105' : 'scale-100'}`}
             />
             <div className={`absolute inset-0 rounded-xl bg-black/20 transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-20'}`} />
           </div>
           
           <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-            <h3 className="font-bold text-2xl truncate tracking-tight" title={songInfo.name}>
+            <h3 className="font-bold text-xl md:text-2xl truncate tracking-tight" title={songInfo.name}>
               {songInfo.name}
             </h3>
             <div className="flex flex-col text-white/70">
@@ -173,113 +190,110 @@ export function Player({ id, provider, coverUrl, songInfo }: PlayerProps) {
               </p>
             </div>
           </div>
+
+          {/* Desktop Play Button */}
+          <div className="hidden md:block">
+            <Button
+                variant="outline"
+                size="icon"
+                className="h-16 w-16 shrink-0 rounded-full border-none bg-white text-black hover:bg-white/90 hover:scale-105 transition-all shadow-lg shadow-white/10"
+                onClick={togglePlay}
+                disabled={loading || !audioUrl}
+            >
+                {loading ? (
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                ) : isPlaying ? (
+                    <Pause className="h-8 w-8 ml-0.5 fill-current" />
+                ) : (
+                    <Play className="h-8 w-8 ml-1 fill-current" />
+                )}
+            </Button>
+          </div>
         </div>
 
-      {audioUrl&&<div className="space-y-4">
+        <div className="flex flex-col gap-4">
            {/* Audio Element (Hidden) */}
-          <audio
-            ref={audioRef}
-            src={audioUrl}
-            onTimeUpdate={onTimeUpdate}
-            onLoadedMetadata={onLoadedMetadata}
-            onEnded={onEnded}
-            onError={() => {
-                setIsPlaying(false);
-                setError("播放出错");
-            }}
-          />
+           {audioUrl && (
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={onLoadedMetadata}
+              onEnded={onEnded}
+              onError={() => {
+                  setIsPlaying(false);
+                  setError("播放出错");
+              }}
+            />
+           )}
 
-          {/* Progress Bar */}
-          <div className="space-y-1.5 group/slider">
-             <Slider
-                value={[currentTime]}
-                max={duration || 100}
-                step={1}
-                onValueChange={handleSeek}
-                className="cursor-pointer [&>.relative>.absolute]:bg-white [&>.relative]:bg-white/20"
-                disabled={!audioUrl}
-             />
-             <div className="flex justify-between text-xs font-medium text-white/50 font-mono">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-             </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center justify-between">
-              
-              <div className="flex items-center gap-2 w-28 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 rounded-full"
-                      onClick={toggleMute}
-                  >
-                      {isMuted || volume === 0 ? <VolumeX className="h-4 w-4"/> : <Volume2 className="h-4 w-4"/>}
-                  </Button>
-                  <Slider
-                      value={[isMuted ? 0 : volume]}
-                      max={1}
-                      step={0.01}
-                      onValueChange={handleVolumeChange}
-                      className="[&>.relative>.absolute]:bg-white/80 [&>.relative]:bg-white/20"
-                  />
-               </div>
-
-              <div className="flex items-center gap-4">
-                  <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-10 w-10 text-white/70 hover:text-white hover:bg-white/10 rounded-full"
-                      disabled={loading || !audioUrl}
-                      onClick={() => {
-                          if (audioRef.current) {
-                               audioRef.current.currentTime -= 10;
-                          }
-                      }}
-                  >
-                      <span className="text-xs font-bold">-10s</span>
-                  </Button>
-
-                  <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-14 w-14 shrink-0 rounded-full border-none bg-white text-black hover:bg-white/90 hover:scale-105 transition-all shadow-lg shadow-white/10"
-                      onClick={togglePlay}
-                      disabled={loading || !audioUrl}
-                  >
-                      {loading ? (
-                          <Loader2 className="h-6 w-6 animate-spin" />
-                      ) : isPlaying ? (
-                          <Pause className="h-6 w-6 ml-0.5 fill-current" />
-                      ) : (
-                          <Play className="h-6 w-6 ml-1 fill-current" />
-                      )}
-                  </Button>
-
-                   <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-10 w-10 text-white/70 hover:text-white hover:bg-white/10 rounded-full"
-                      disabled={loading || !audioUrl}
-                      onClick={() => {
-                           if (audioRef.current) {
-                               audioRef.current.currentTime += 10;
-                          }
-                      }}
-                  >
-                       <span className="text-xs font-bold">+10s</span>
-                  </Button>
+           {/* Progress Bar */}
+           <div className="space-y-1.5 group/slider">
+              <Slider
+                 value={[currentTime]}
+                 max={duration || 100}
+                 step={1}
+                 onValueChange={handleSeek}
+                 className="cursor-pointer [&>.relative>.absolute]:bg-white [&>.relative]:bg-white/20"
+                 disabled={!audioUrl}
+              />
+              <div className="flex justify-between text-xs font-medium text-white/50 font-mono">
+                 <span>{formatTime(currentTime)}</span>
+                 <span>{formatTime(duration)}</span>
               </div>
+           </div>
 
-               <div className="w-28 flex justify-end">
-                   {/* Placeholder for future buttons like Loop or Playlist */}
+           {/* Controls */}
+           <div className="flex items-center justify-between">
+               
+               <div className="flex items-center gap-2 w-32 group/volume">
+                   <Button 
+                       variant="ghost" 
+                       size="icon" 
+                       className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                       onClick={toggleMute}
+                   >
+                       {isMuted || volume === 0 ? <VolumeX className="h-4 w-4"/> : <Volume2 className="h-4 w-4"/>}
+                   </Button>
+                   <Slider
+                       value={[isMuted ? 0 : volume]}
+                       max={1}
+                       step={0.01}
+                       onValueChange={handleVolumeChange}
+                       className="[&>.relative>.absolute]:bg-white/80 [&>.relative]:bg-white/20 opacity-0 group-hover/volume:opacity-100 transition-opacity duration-300"
+                   />
+                </div>
+
+               {/* Mobile Play Button */}
+               <div className="md:hidden">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-12 w-12 shrink-0 rounded-full border-none bg-white text-black hover:bg-white/90 hover:scale-105 transition-all shadow-lg shadow-white/10"
+                        onClick={togglePlay}
+                        disabled={loading || !audioUrl}
+                    >
+                        {loading ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : isPlaying ? (
+                            <Pause className="h-5 w-5 ml-0.5 fill-current" />
+                        ) : (
+                            <Play className="h-5 w-5 ml-1 fill-current" />
+                        )}
+                    </Button>
                </div>
-          </div>
+
+                <div className="w-32 flex justify-end">
+                    {/* Placeholder for future buttons */}
+                </div>
+           </div>
+        </div>
           
-          {error && <p className="text-xs text-red-400 text-center bg-red-500/10 py-1 rounded-full animate-in fade-in slide-in-from-top-1">{error}</p>}
-        </div>}
+        {error && <p className="absolute bottom-24 left-0 right-0 text-xs text-red-400 text-center bg-black/60 py-1">{error}</p>}
       </div>
     </div>
   );
 }
+);
+
+Player.displayName = "Player";
