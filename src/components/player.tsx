@@ -35,6 +35,14 @@ export const Player = forwardRef<PlayerRef, PlayerProps & { onTimeUpdate?: (time
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Helper function to convert HTTP to HTTPS
+  const convertToHttps = (url: string): string => {
+    if (url.startsWith('http://')) {
+      return url.replace('http://', 'https://');
+    }
+    return url;
+  };
+
   useImperativeHandle(ref, () => ({
     seek: (time: number) => {
       handleSeek([time]);
@@ -72,7 +80,7 @@ export const Player = forwardRef<PlayerRef, PlayerProps & { onTimeUpdate?: (time
         const data = await res.json();
         if (mounted) {
           if (data.url) {
-            setAudioUrl(data.url);
+            setAudioUrl(convertToHttps(data.url));
           } else {
              setError("无法获取播放链接");
           }
