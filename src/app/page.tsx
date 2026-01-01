@@ -23,7 +23,7 @@ function formatTime(t: number) {
 function HomeContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  
+
   const [provider, setProvider] = useState<Provider>("tencent")
   const [inputValue, setInputValue] = useState("")
   const [currentTime, setCurrentTime] = useState(0)
@@ -39,11 +39,11 @@ function HomeContent() {
   // The hook should drive the data
   // Only query if both are present in URL (or we want to trigger from input too? Design decision: URL drives query to allow sharing)
   // Actually original code synced local state with URL.
-  
+
   // Use a separate state to "trigger" the query?
   // Or just use the URL params as the source of truth for the Query.
   // The input value is local state for editing.
-  
+
   const { data: lyricsData, isLoading: loading, error: lyricErrorObject } = useLyrics(urlId || "", urlProvider || "tencent")
   const lyricError = lyricErrorObject ? (lyricErrorObject as Error).message : ""
 
@@ -51,7 +51,7 @@ function HomeContent() {
     if (!lyricsData) return null
     return parseLrc(lyricsData.lrc || "", lyricsData.tlyric || "")
   }, [lyricsData])
-  
+
   const coverUrl = lyricsData?.coverUrl || ""
   const songInfo = lyricsData?.songInfo || null
 
@@ -95,11 +95,11 @@ function HomeContent() {
 
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="w-full max-w-4xl py-6 md:py-10 px-4 md:px-6">
+    <div className="flex h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex flex-col w-full max-w-4xl h-full py-6 md:py-10 px-4 md:px-6">
         <NavMenu />
-        
-        <PageHeader 
+
+        <PageHeader
           title="播放器"
           provider={provider}
           setProvider={setProvider}
@@ -114,75 +114,77 @@ function HomeContent() {
           <p className="mt-2 text-sm text-red-600 mb-4">{lyricError}</p>
         )}
 
-        {lyrics && (
-          <div className="grid grid-cols-1 gap-6 mt-6">
-            <div  className="space-y-4">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {lyrics && (
+            <div className="grid grid-cols-1 gap-6 mt-6">
+              <div className="space-y-4">
                 {coverUrl && songInfo && (
-                  <Player 
+                  <Player
                     ref={playerRef}
-                    id={urlId || inputValue} 
-                    provider={provider} 
-                    coverUrl={coverUrl} 
+                    id={urlId || inputValue}
+                    provider={provider}
+                    coverUrl={coverUrl}
                     songInfo={songInfo}
                     onTimeUpdate={setCurrentTime}
                   />
                 )}
-              <LyricsRenderer 
-                lyrics={lyrics} 
-                currentTime={currentTime} 
-                showTimestamp={false} 
-                coverUrl={coverUrl}
-                onSeek={(time) => playerRef.current?.seek(time)}
-              />
+                <LyricsRenderer
+                  lyrics={lyrics}
+                  currentTime={currentTime}
+                  showTimestamp={false}
+                  coverUrl={coverUrl}
+                  onSeek={(time) => playerRef.current?.seek(time)}
+                />
+              </div>
+              <div>
+                <Tabs defaultValue="appreciation" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="appreciation">AI 赏析</TabsTrigger>
+                    <TabsTrigger value="learning">语言学习</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="appreciation" className="mt-4">
+                    <AIAnalysis
+                      lyrics={lyrics}
+                      plainText={plainText}
+                      songInfo={songInfo}
+                      urlId={urlId || inputValue}
+                      urlProvider={urlProvider || provider}
+                      provider={provider}
+                      model={model}
+                      baseUrl={baseUrl}
+                      apiKey={apiKey}
+                      title="音乐赏析"
+                      promptGenerator={analyzePrompt}
+                      cacheKeyPrefix="analysis"
+                      systemPrompt="你是一位资深乐评人"
+                    />
+                  </TabsContent>
+                  <TabsContent value="learning" className="mt-4">
+                    <AIAnalysis
+                      lyrics={lyrics}
+                      plainText={plainText}
+                      songInfo={songInfo}
+                      urlId={urlId || inputValue}
+                      urlProvider={urlProvider || provider}
+                      provider={provider}
+                      model={model}
+                      baseUrl={baseUrl}
+                      apiKey={apiKey}
+                      title="语言学习分析"
+                      promptGenerator={languageLearningPrompt}
+                      cacheKeyPrefix="language_learning"
+                      systemPrompt="你是一位资深的语言学习专家"
+                    />
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
-            <div>
-              <Tabs defaultValue="appreciation" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="appreciation">AI 赏析</TabsTrigger>
-                  <TabsTrigger value="learning">语言学习</TabsTrigger>
-                </TabsList>
-                <TabsContent value="appreciation" className="mt-4">
-                  <AIAnalysis
-                    lyrics={lyrics}
-                    plainText={plainText}
-                    songInfo={songInfo}
-                    urlId={urlId || inputValue}
-                    urlProvider={urlProvider || provider}
-                    provider={provider}
-                    model={model}
-                    baseUrl={baseUrl}
-                    apiKey={apiKey}
-                    title="音乐赏析"
-                    promptGenerator={analyzePrompt}
-                    cacheKeyPrefix="analysis"
-                    systemPrompt="你是一位资深乐评人"
-                  />
-                </TabsContent>
-                <TabsContent value="learning" className="mt-4">
-                  <AIAnalysis
-                    lyrics={lyrics}
-                    plainText={plainText}
-                    songInfo={songInfo}
-                    urlId={urlId || inputValue}
-                    urlProvider={urlProvider || provider}
-                    provider={provider}
-                    model={model}
-                    baseUrl={baseUrl}
-                    apiKey={apiKey}
-                    title="语言学习分析"
-                    promptGenerator={languageLearningPrompt}
-                    cacheKeyPrefix="language_learning"
-                    systemPrompt="你是一位资深的语言学习专家"
-                  />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        )}
+          )}
 
-        {!lyrics && (
-          <p className="mt-6 text-sm text-zinc-600">请输入歌曲链接或 ID，然后点击获取歌词。</p>
-        )}
+          {!lyrics && (
+            <p className="mt-6 text-sm text-zinc-600">请输入歌曲链接或 ID，然后点击获取歌词。</p>
+          )}
+        </div>
       </main>
     </div>
   )
