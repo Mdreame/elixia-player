@@ -17,7 +17,7 @@ export default function CardPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-transparent p-0">
-                <div className="w-full max-w-md mx-auto aspect-[4/1] md:aspect-[5/1] rounded-xl bg-zinc-900 border border-white/10 shadow-xl overflow-hidden relative">
+                <div className="w-full mx-auto aspect-[4/1] md:aspect-[5/1] rounded-xl bg-zinc-900 border border-white/10 shadow-xl overflow-hidden relative">
                     <div className="p-3 flex items-center gap-4 h-20 md:h-24">
                         <Skeleton className="shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-lg bg-zinc-800" />
                         <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">

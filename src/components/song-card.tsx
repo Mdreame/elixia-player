@@ -29,7 +29,7 @@ export function SongCard({ id, provider, coverUrl, songInfo }: SongCardProps) {
     // Add other providers if known, otherwise fallback to internal or search
 
     return (
-        <div className="relative group w-full max-w-md mx-auto">
+        <div className="relative group w-full mx-auto">
             <Link
                 href={externalHref}
                 target="_blank"
