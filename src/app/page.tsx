@@ -13,6 +13,8 @@ import { NavMenu } from "@/components/nav-menu"
 import { Provider } from "@/components/provider-selector"
 import { useLyrics } from "@/hooks/use-api"
 import { Player, type PlayerRef } from "@/components/player"
+import { Button } from "@/components/ui/button"
+import { Copy, Download, ExternalLink } from "lucide-react"
 
 function formatTime(t: number) {
   const m = Math.floor(t / 60)
@@ -30,6 +32,9 @@ function HomeContent() {
   const [baseUrl, setBaseUrl] = useState("")
   const [apiKey, setApiKey] = useState("")
   const [model, setModel] = useState("gpt-4o-mini")
+  const [copiedPlayer, setCopiedPlayer] = useState(false)
+  const [copiedCard, setCopiedCard] = useState(false)
+  const [copiedImage, setCopiedImage] = useState(false)
   const playerRef = useRef<PlayerRef>(null)
 
   // URL Params -> Hook Params
@@ -97,6 +102,53 @@ function HomeContent() {
     router.push(`/?${params.toString()}`)
   }
 
+  // Handler for copying player embed code
+  function handleCopyPlayer() {
+    if (!urlId || !urlProvider) return
+    const embedCode = `<iframe height="81px" width="100%" src="${window.location.origin}/embed/${urlProvider}/${urlId}"></iframe>`
+    navigator.clipboard.writeText(embedCode)
+    setCopiedPlayer(true)
+    setTimeout(() => setCopiedPlayer(false), 2000)
+  }
+
+  // Handler for copying card embed code
+  function handleCopyCard() {
+    if (!urlId || !urlProvider) return
+    const embedCode = `<iframe height="81px" width="100%" src="${window.location.origin}/card/${urlProvider}/${urlId}"></iframe>`
+    navigator.clipboard.writeText(embedCode)
+    setCopiedCard(true)
+    setTimeout(() => setCopiedCard(false), 2000)
+  }
+
+  // Handler for copying image URL
+  function handleCopyImageUrl() {
+    if (!urlId || !urlProvider) return
+    const imageUrl = `${window.location.origin}/card/${urlProvider}/${urlId}/image`
+    navigator.clipboard.writeText(imageUrl)
+    setCopiedImage(true)
+    setTimeout(() => setCopiedImage(false), 2000)
+  }
+
+  // Handler for downloading image
+  async function handleDownloadImage() {
+    if (!urlId || !urlProvider) return
+    const imageUrl = `${window.location.origin}/card/${urlProvider}/${urlId}/image`
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${songInfo.name || 'song'}-card.png`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Failed to download image:', error)
+    }
+  }
+
 
   return (
     <div className="flex h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -119,6 +171,51 @@ function HomeContent() {
         )}
 
         <div className="flex-1 overflow-y-auto min-h-0">
+          {/* Card Actions */}
+          {urlId && urlProvider && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyPlayer}
+                className="flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                {copiedPlayer ? "已复制播放器代码" : "复制播放器代码"}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyCard}
+                className="flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                {copiedCard ? "已复制卡片代码" : "复制卡片代码"}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyImageUrl}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {copiedImage ? "已复制图片链接" : "复制图片链接"}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadImage}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                下载卡片图片
+              </Button>
+            </div>
+          )}
+
           {lyrics && (
             <div className="grid grid-cols-1 gap-6 mt-6">
               <div className="space-y-4">
@@ -132,6 +229,7 @@ function HomeContent() {
                   onTimeUpdate={setCurrentTime}
                 />
                 {/* )} */}
+
                 <LyricsRenderer
                   lyrics={lyrics}
                   currentTime={currentTime}
