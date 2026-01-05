@@ -133,7 +133,7 @@ export function IframePlayer({ id, provider, coverUrl, songInfo }: IframePlayerP
     };
 
     return (
-        <div className="relative w-full overflow-hidden rounded-xl bg-zinc-900 border border-white/10 shadow-xl font-sans text-white group select-none">
+        <div className="relative w-full overflow-hidden rounded-xl bg-zinc-900 shadow-xl font-sans text-white group select-none">
             {/* Dynamic Background */}
             <div
                 className="absolute inset-0 opacity-30 bg-cover bg-center blur-xl transition-all duration-1000"
