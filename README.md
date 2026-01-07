@@ -1,8 +1,9 @@
-# Elixir Player
+# Elixia Player
 
 A modern music player web application built with Next.js, featuring AI-powered lyrics analysis and language learning tools. It integrates with various music platforms to provide a seamless playback and learning experience.
 
 ## Features
+
 - **Multi-platform Support**: Unified access to music from Netease, Tencent, Kugou, and more.
 - **AI Lyrics Appreciation**: Get deep insights into song meanings, themes, and artistic expressions.
 - **AI Language Learning**: Specialized AI analysis for vocabulary and grammar based on song lyrics.
@@ -12,9 +13,21 @@ A modern music player web application built with Next.js, featuring AI-powered l
 ## Song Card
 
 ```html
-<iframe height="83px" width="100%" src="https://elixia-player.koyeb.app/embed/tencent/001ATfEL0kn2NA"></iframe>
-<iframe height="83px" width="100%" src="https://elixia-player.koyeb.app/card?url=https://music.163.com/song?id=610149"></iframe>
-<iframe height="83px" width="100%" src="https://elixia-player.koyeb.app/card/netease/610149"></iframe>
+<iframe
+  height="83px"
+  width="100%"
+  src="https://elixia-player.koyeb.app/embed/tencent/001ATfEL0kn2NA"
+></iframe>
+<iframe
+  height="83px"
+  width="100%"
+  src="https://elixia-player.koyeb.app/card?url=https://music.163.com/song?id=610149"
+></iframe>
+<iframe
+  height="83px"
+  width="100%"
+  src="https://elixia-player.koyeb.app/card/netease/610149"
+></iframe>
 ```
 
 ### Image
@@ -54,37 +67,49 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ### Music Data
 
 #### `POST /api/lyrics`
+
 Fetch lyrics and metadata for a specific track.
+
 - **Body**: `{ provider: string, source: "url" | "id", value: string, cookie?: string }`
 - **Response**: Lyrics (LRC), translation, and song metadata (name, artist, album, cover).
 
 #### `POST /api/search`
+
 Search for songs.
+
 - **Body**: `{ provider: string, keyword: string, page?: number, limit?: number }`
 - **Response**: Array of search results.
 
 #### `POST /api/playlist`
+
 Retrieve tracks from a playlist.
+
 - **Body**: `{ provider: string, value: string }`
 - **Response**: Array of songs in the playlist.
 
 #### `POST /api/url`
+
 Get the direct audio stream URL.
+
 - **Body**: `{ provider: string, id: string }`
 - **Response**: Playback URL and quality info.
 
 ### Utilities
 
 #### `GET /api/proxy-image?url=...`
+
 A proxy endpoint to bypass CORS restrictions for external album art.
 
 #### `GET /card/image?url=...&width=...`
+
 Utility endpoint that parses a music platform URL and redirects to the appropriate dynamic card image.
 
 #### `GET /app/card/[provider]/[id]/image?width=...`
+
 Generates a dynamic Open Graph (OG) image for a specific song, optimized for sharing.
 
 ## Tech Stack
+
 - **Framework**: [Next.js](https://nextjs.org/) (App Router)
 - **Styling**: Tailwind CSS & Lucide Icons
 - **Music API**: MetingJS integration

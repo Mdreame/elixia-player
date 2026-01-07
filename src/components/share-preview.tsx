@@ -126,7 +126,7 @@ export function SharePreview({ songs, playlistTitle, onImagesLoaded, onRemoveSon
             <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-bold text-xs">
               EP
             </div>
-            <span className="font-bold tracking-tight">Elixir Player</span>
+            <span className="font-bold tracking-tight">Elixia Player</span>
           </div>
           <p className="text-zinc-400 text-xs font-mono uppercase tracking-widest">
             Music Collection / Share your taste
